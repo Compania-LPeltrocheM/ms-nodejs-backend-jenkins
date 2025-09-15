@@ -4,7 +4,7 @@ pipeline {
     }
 
     environment {
-        APELLIDO = "lpeltrochem"
+        APELLIDO = "apellido" // Reemplazar por tu apellido
         SHORT_SHA = "${env.GIT_COMMIT[0..6]}"
         IMAGE_NAME = "acr${APELLIDO}.azurecr.io/my-nodejs-app"
         TAG = "${SHORT_SHA}"
@@ -36,155 +36,26 @@ pipeline {
             }
         }
         
-        stage('Instalar dependencias') {
+        stage('Hello world') {
             steps {
-                sh '''
-                  echo ">>> Instalar dependencias"
-                  npm install
-                '''
-            }
-        }
-
-        
-        stage('Pruebas unitarias') {
-            steps {
-                sh '''
-                  echo ">>> Pruebas unitarias"
-                  npm run test:unit
-                '''
-            }
-        }
-
-        
-        stage('Pruebas de integración') {
-            steps {
-                sh '''
-                  echo ">>> Pruebas de integración"
-                  npm run test:integration
-                '''
-            }
-        }
-        
-        stage('ACR Login') {
-            steps {
-                sh '''
-                  echo ">>> ACR Login"
-                  az acr login --name $ACR_NAME
-                '''
-            }
-        }
-        
-        stage('Build Docker Image') {
-            steps {
-                sh '''
-                  echo ">>> Construyendo imagen $IMAGE"
-                  docker build -t $IMAGE .
-                  docker push $IMAGE
-                '''
-            }
-        }
-        
-        stage('Deploy to DEV') {
-            steps {
-                script {
-                    env.ENV = "dev"
-                    env.API_PROVIDER_URL = "http://dev.api.com"
-                    env.APP_NAME = "aca-ms-${APELLIDO}-${ENV}"
+                script { 
+                    // Declarar más variables de entorno
+                    env.VARIABLE = "demo123"
                 }
+                // Primer step
                 sh '''
-                  echo ">>> Configurando ACR credentials para Container App..."
-                  ACR_SERVER=$(az acr show --name $ACR_NAME --resource-group $RESOURCE_GROUP --query loginServer --output tsv)
-                  echo "Servidor ACR: $ACR_SERVER"
-                  az containerapp registry set \
-                    --name $APP_NAME \
-                    --resource-group $RESOURCE_GROUP \
-                    --server $ACR_SERVER \
-                    --identity system
-
-                  echo ">>> Desplegando en $ENV"
-                  az containerapp update \
-                    --name $APP_NAME \
-                    --resource-group $RESOURCE_GROUP \
-                    --image $IMAGE \
-                    --set-env-vars ENV=$ENV API_PROVIDER_URL=$API_PROVIDER_URL
+                  echo ">>> Impresión Hello world"
+                  echo "Hello world"
+                  echo "Variable declarada en script: $VARIABLE"
+                  echo "Variable declarada en environment: $APELLIDO"
                 '''
-            }
-        }
-
-        stage('Approval QA') {
-            steps {
-                input message: "Aprobar despliegue en QA?"
-            }
-        }
-
-        stage('Deploy to QA') {
-            steps {
-                script {
-                    env.ENV = "qa"
-                    env.API_PROVIDER_URL = "http://qa.api.com"
-                    env.APP_NAME = "aca-ms-${APELLIDO}-${ENV}"
-                }
+                // Step adicional
                 sh '''
-                  echo ">>> Configurando ACR credentials para Container App..."
-                  ACR_SERVER=$(az acr show --name $ACR_NAME --resource-group $RESOURCE_GROUP --query loginServer --output tsv)
-                  echo "Servidor ACR: $ACR_SERVER"
-                  az containerapp registry set \
-                    --name $APP_NAME \
-                    --resource-group $RESOURCE_GROUP \
-                    --server $ACR_SERVER \
-                    --identity system
-
-                  echo ">>> Desplegando en $ENV"
-                  az containerapp update \
-                    --name $APP_NAME \
-                    --resource-group $RESOURCE_GROUP \
-                    --image $IMAGE \
-                    --set-env-vars ENV=$ENV API_PROVIDER_URL=$API_PROVIDER_URL
-                '''
-            }
-        }
-
-        stage('Approval PRD') {
-            steps {
-                input message: "Aprobar despliegue en PRD?"
-            }
-        }
-
-        stage('Deploy to PRD') {
-            steps {
-                script {
-                    env.ENV = "prd"
-                    env.API_PROVIDER_URL = "http://prd.api.com"
-                    env.APP_NAME = "aca-ms-${APELLIDO}-${ENV}"
-                }
-                sh '''
-                  echo ">>> Configurando ACR credentials para Container App..."
-                  ACR_SERVER=$(az acr show --name $ACR_NAME --resource-group $RESOURCE_GROUP --query loginServer --output tsv)
-                  echo "Servidor ACR: $ACR_SERVER"
-                  az containerapp registry set \
-                    --name $APP_NAME \
-                    --resource-group $RESOURCE_GROUP \
-                    --server $ACR_SERVER \
-                    --identity system
-
-                  echo ">>> Desplegando en $ENV"
-                  az containerapp update \
-                    --name $APP_NAME \
-                    --resource-group $RESOURCE_GROUP \
-                    --image $IMAGE \
-                    --set-env-vars ENV=$ENV API_PROVIDER_URL=$API_PROVIDER_URL
-                '''
-            }
-        }
-
-        stage('Print Endpoint') {
-            steps {
-                sh '''
-                  ENDPOINT=$(az containerapp show \
-                    --name $APP_NAME \
-                    --resource-group $RESOURCE_GROUP \
-                    --query properties.configuration.ingress.fqdn -o tsv)
-                  echo "Endpoint del Container App ($ENV): https://$ENDPOINT"
+                  echo ">>> Versiones instaladas:"
+                  node -v
+                  npm -v
+                  docker --version
+                  az version
                 '''
             }
         }
